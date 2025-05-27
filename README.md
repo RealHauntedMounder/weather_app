@@ -1,6 +1,6 @@
 **К приложению написаны тесты, всё помещено в докер контейнер**
 
-В работе использовался JavaScript, FastAPI, HTML, Tailwind CSS
+В работе использовался JavaScript, FastAPI, HTML, Tailwind CSS, Docker
 
 Для запуска нужно зайти в корневую директорию с проектом и прописать:
 1) docker build -t myimage . 
