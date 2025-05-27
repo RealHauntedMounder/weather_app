@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Weather App</title>
+  </head>
+  <body>
+    <div class="mt-12">
+      <h1 class="font-bold text-3xl text-center">
+        Узнайте погоду в вашем городе
+      </h1>
+    </div>
+    <div
+      class="relative flex h-10 w-full min-w-[200px] max-w-[24rem] mt-32 mx-auto"
+    >
+      <button
+        id="searchBtn"
+        class="!absolute right-1 top-1 z-10 select-none rounded bg-blue-500 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none peer-placeholder-shown:pointer-events-none peer-placeholder-shown:bg-blue-gray-500 peer-placeholder-shown:opacity-50 peer-placeholder-shown:shadow-none"
+        type="button"
+        data-ripple-light="true"
+      >
+        Найти
+      </button>
+      <input
+        id="locationInput"
+        type="text"
+        class="peer h-full w-full rounded-[7px] border border-blue-gray-200 bg-transparent px-3 py-2.5 pr-20 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:border-pink-500 focus:border-t-transparent focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
+        placeholder=" "
+        required
+      />
+      <label
+        class="before:content[' '] after:content[' '] pointer-events-none absolute left-0 -top-1.5 flex h-full w-full select-none text-[11px] font-normal leading-tight text-blue-gray-400 transition-all before:pointer-events-none before:mt-[6.5px] before:mr-1 before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-t before:border-l before:border-blue-gray-200 before:transition-all after:pointer-events-none after:mt-[6.5px] after:ml-1 after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-t after:border-r after:border-blue-gray-200 after:transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:leading-[3.75] peer-placeholder-shown:text-blue-gray-500 peer-placeholder-shown:before:border-transparent peer-placeholder-shown:after:border-transparent peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-pink-500 peer-focus:before:border-t-2 peer-focus:before:border-l-2 peer-focus:before:!border-pink-500 peer-focus:after:border-t-2 peer-focus:after:border-r-2 peer-focus:after:!border-pink-500 peer-disabled:text-transparent peer-disabled:before:border-transparent peer-disabled:after:border-transparent peer-disabled:peer-placeholder-shown:text-blue-gray-500"
+      >
+        Город, например, Moscow
+      </label>
+    </div>
+    <div
+      id="result"
+      class="mt-10 max-w-4xl mx-auto text-sm text-gray-800 text-center mx-auto"
+    ></div>
+    <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/ripple.js"></script>
+    <script>
+      document
+        .getElementById("searchBtn")
+        .addEventListener("click", async () => {
+          const city = document.getElementById("locationInput").value;
+          const resultDiv = document.getElementById("result");
+
+          resultDiv.innerHTML = "Загрузка...";
+
+          try {
+            const response = await fetch("/get_weather", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ name: city }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.погода) {
+              const weatherHtml = `
+            <h2 class="text-xl font-semibold mb-4">Погода в ${
+              data["город"]
+            }</h2>
+            <table class="table-auto border-collapse w-full text-left">
+              <thead>
+                <tr>
+                  <th class="border px-2 py-1">Дата</th>
+                  <th class="border px-2 py-1">Темп. (°C)</th>
+                  <th class="border px-2 py-1">Влажность (%)</th>
+                  <th class="border px-2 py-1">Осадки (%)</th>
+                  <th class="border px-2 py-1">Ветер (м/с)</th>
+                  <th class="border px-2 py-1">Снегопад</th>
+                  <th class="border px-2 py-1">Дождь</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.погода
+                  .slice(0, 100)
+                  .map((row) => {
+                    return `
+                      <tr>
+                        <td class="border px-2 py-1">${row.date}</td>
+                        <td class="border px-2 py-1">${row.temperature_2m}</td>
+                        <td class="border px-2 py-1">${row.relative_humidity_2m}</td>
+                        <td class="border px-2 py-1">${row.precipitation_probability}</td>
+                        <td class="border px-2 py-1">${row.windspeed_10m}</td>
+                        <td class="border px-2 py-1">${row.snowfall}</td>
+                        <td class="border px-2 py-1">${row.rain}</td>
+                      </tr>`;
+                  })
+                  .join("")}
+              </tbody>
+            </table>
+          `;
+              resultDiv.innerHTML = weatherHtml;
+            } else {
+              resultDiv.innerHTML = `<p class="text-red-500">Ошибка: ${
+                data || "Не удалось получить погоду."
+              }</p>`;
+            }
+          } catch (err) {
+            resultDiv.innerHTML = `<p class="text-red-500">Ошибка соединения.</p>`;
+            console.error(err);
+          }
+        });
+    </script>
+  </body>
+</html>
